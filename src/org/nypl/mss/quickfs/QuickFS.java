@@ -6,10 +6,7 @@ package org.nypl.mss.quickfs;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.apache.commons.cli.*;
 
 /**
@@ -26,7 +23,7 @@ public class QuickFS {
     private String filter;
     private boolean hasFilter;
     
-    QuickFS(String[] args) throws ParseException{
+    QuickFS(String[] args) throws ParseException, IOException, InterruptedException{
         this.arguments = args;
         options = createOptions();
         CommandLineParser parser = new PosixParser();
@@ -58,14 +55,42 @@ public class QuickFS {
         
         return mOptions;
     }
+
+
+    private void listFileSystems() throws ParseException, IOException, InterruptedException {
+        if(hasFilter){
+            System.out.println("listing files in directory: " + path + " of filesystem: " + filter);
+        }
+        else
+            System.out.println("listing files  and filesystems in directory: " + path);
+        
+        files = Arrays.asList(path.listFiles());
+
+        for(File file: files){
+            if(file.getName().toLowerCase().endsWith("001") && !file.isHidden()){
+                QuickMD q = new QuickMD(file);
+                filesystems.put(file.getName(), q.getFSSTring());
+                filenames.add(file.getName());
+            }
+        }
+
+        Collections.sort(filenames);
+        
+        for(Object filename : filenames){
+            if(hasFilter){
+                if(filesystems.get(filename).equals(filter)){
+                    System.out.println(filename);
+                }
+            } else {
+                System.out.println(filename + "\t" + filesystems.get(filename));
+            }
+            
+        }
+    }
     
+        
     public static void main(String[] args) throws ParseException, IOException, InterruptedException{
         QuickFS qfs = new QuickFS(args);
-    }
-
-    private void listFileSystems() throws ParseException {
-        
-        
     }
 
 }
